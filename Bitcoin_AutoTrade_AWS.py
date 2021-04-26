@@ -44,8 +44,9 @@ upbit = pyupbit.Upbit(access, secret)
 print("Autotrade started")
 send_log_to_slack('Home Desktop', 'Autotrade started')
 
-# 자동매매 시작
+# 자동매매 시작, !모든 암호화폐를 원화로 매도하여 준비되었는지 확인!
 time_delay = 30 # 기본 오전 9시로부터 지연시간(분) 설정
+krw = get_balance("KRW")
 while True:
     try:
         now = datetime.datetime.now()
@@ -53,21 +54,57 @@ while True:
         end_time = start_time + datetime.timedelta(days=1)
 
         if start_time < now < end_time - datetime.timedelta(seconds=10):
-            target_price = get_target_price("KRW-BTC", 0.5)
-            current_price = get_current_price("KRW-BTC")
-            if target_price <= current_price:
-                krw = get_balance("KRW")
-                if krw > 5000:
-                    upbit.buy_market_order("KRW-BTC", krw*0.9995)
-                    send_log_to_slack('Home Desktop', '매수완료. 매수가 : ', str(current_price), ' / 목표가 :', str(target_price))
+            # KRW-BTC
+            target_price_BTC = get_target_price("KRW-BTC", 0.5)
+            current_price_BTC = get_current_price("KRW-BTC")
+            btc = get_balance("BTC")
+
+            # KRW-ETH
+            target_price_ETH = get_target_price("KRW-ETH", 0.5)
+            current_price_ETH = get_current_price("KRW-ETH")
+            eth = get_balance("ETH")
+
+            if (target_price_BTC <= current_price_BTC) and (btc == 0):
+                buykrw = krw / 2
+                if buykrw > 5000:
+                    upbit.buy_market_order("KRW-BTC", buykrw)
+                    send_log_to_slack('Home Desktop', f'[KRW-BTC] 매수완료. 매수가 : {target_price_BTC:,.0f} / 목표가 : {current_price_BTC:,.0f}')
+                else:
+                    send_log_to_slack('Home Desktop', f'[KRW-BTC] 원화 잔고 부족')
+
+            if (target_price_ETH <= current_price_ETH) and (eth == 0):
+                buykrw = krw / 2
+                if buykrw > 5000:
+                    upbit.buy_market_order("KRW-ETH", buykrw)
+                    send_log_to_slack('Home Desktop', f'[KRW-ETH] 매수완료. 매수가 : {target_price_ETH:,.0f} / 목표가 : {current_price_ETH:,.0f}')
+                else:
+                    send_log_to_slack('Home Desktop', f'[KRW-ETH] 원화 잔고 부족')
+
         else:
             btc = get_balance("BTC")
-            current_price = get_current_price("KRW-BTC")
-            btc_balance_as_krw = btc * current_price
+            current_price_BTC = get_current_price("KRW-BTC")
+            btc_balance_as_krw = btc * current_price_BTC
+
+            eth = get_balance("ETH")
+            current_price_ETH = get_current_price("KRW-ETH")
+            eth_balance_as_krw = eth * current_price_ETH
+
             if btc_balance_as_krw > 5000:
-                upbit.sell_market_order("KRW-BTC", btc*0.9995)
-                send_log_to_slack('Home Desktop', '매도완료. 매도가 : ', str(current_price))
-        time.sleep(60)
+                upbit.sell_market_order("KRW-BTC", btc)
+                send_log_to_slack('Home Desktop', f'[KRW-BTC] 매도완료. 매도가 : {current_price_BTC:,.0f}')
+            else:
+                send_log_to_slack('Home Desktop', '[KRW-BTC] 매도잔고 부족')
+
+            if eth_balance_as_krw > 5000:
+                upbit.sell_market_order("KRW-ETH", eth)
+                send_log_to_slack('Home Desktop', f'[KRW-ETH] 매도완료. 매도가 : {current_price_ETH:,.0f}')
+            else:
+                send_log_to_slack('Home Desktop', '[KRW-ETH] 매도잔고 부족')
+
+            krw = get_balance("KRW")
+
+        time.sleep(30)
+
     except Exception as e:
         print(e)
-        time.sleep(60)
+        time.sleep(30)
