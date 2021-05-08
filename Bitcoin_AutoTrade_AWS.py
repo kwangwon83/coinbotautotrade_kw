@@ -3,17 +3,15 @@ import pyupbit
 import datetime
 from slacker import Slacker
 
-access = ""  # 본인 값으로 변경
-secret = ""  # 본인 값으로 변경
-
+access = ""          # 본인 값으로 변경
+secret = ""          # 본인 값으로 변경
 
 def send_log_to_slack(user_name, msg):
     ts = datetime.datetime.now().strftime('%H:%M:%S')
-    msg = '%s %s' % (ts, msg)
+    msg = '%s %s'%(ts, msg)
     token = ''
     slack = Slacker(token)
     slack.chat.post_message('#coinbot', msg, username=user_name)
-
 
 def get_target_price(ticker, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
@@ -21,13 +19,11 @@ def get_target_price(ticker, k):
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
-
 def get_start_time(ticker):
     """시작 시간 조회"""
     df = pyupbit.get_ohlcv(ticker, interval="day", count=1)
     start_time = df.index[0]
     return start_time
-
 
 def get_balance(ticker):
     """잔고 조회"""
@@ -39,11 +35,9 @@ def get_balance(ticker):
             else:
                 return 0
 
-
 def get_current_price(ticker):
     """현재가 조회"""
     return pyupbit.get_orderbook(tickers=ticker)[0]["orderbook_units"][0]["ask_price"]
-
 
 # 로그인
 upbit = pyupbit.Upbit(access, secret)
@@ -51,7 +45,7 @@ print("Autotrade started")
 send_log_to_slack('Home Desktop', 'Autotrade started')
 
 # 자동매매 시작, !모든 암호화폐를 원화로 매도하여 준비되었는지 확인!
-time_delay = 30  # 기본 오전 9시로부터 지연시간(분) 설정
+time_delay = 30 # 기본 오전 9시로부터 지연시간(분) 설정
 krw = get_balance("KRW")
 if krw is None: krw = 0
 alive_alarm = 0
@@ -81,9 +75,8 @@ while True:
                     buykrw = get_balance("KRW")
 
                 if buykrw > 5000:
-                    upbit.buy_market_order("KRW-BTC", buykrw)
-                    send_log_to_slack('Home Desktop',
-                                      f'[KRW-BTC] 매수완료. 매수가 : {target_price_BTC:,.0f} / 목표가 : {current_price_BTC:,.0f}')
+                    upbit.buy_market_order("KRW-BTC", buykrw * 0.9995)
+                    send_log_to_slack('Home Desktop', f'[KRW-BTC] 매수완료. 매수가 : {target_price_BTC:,.0f} / 목표가 : {current_price_BTC:,.0f}')
                 else:
                     send_log_to_slack('Home Desktop', f'[KRW-BTC] 원화 잔고 부족')
 
@@ -94,9 +87,8 @@ while True:
                     buykrw = get_balance("KRW")
 
                 if buykrw > 5000:
-                    upbit.buy_market_order("KRW-ETH", buykrw)
-                    send_log_to_slack('Home Desktop',
-                                      f'[KRW-ETH] 매수완료. 매수가 : {target_price_ETH:,.0f} / 목표가 : {current_price_ETH:,.0f}')
+                    upbit.buy_market_order("KRW-ETH", buykrw * 0.9995)
+                    send_log_to_slack('Home Desktop', f'[KRW-ETH] 매수완료. 매수가 : {target_price_ETH:,.0f} / 목표가 : {current_price_ETH:,.0f}')
                 else:
                     send_log_to_slack('Home Desktop', f'[KRW-ETH] 원화 잔고 부족')
 
