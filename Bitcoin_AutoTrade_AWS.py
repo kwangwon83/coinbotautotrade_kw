@@ -3,8 +3,8 @@ import pyupbit
 import datetime
 from slacker import Slacker
 
-access = ""          # 본인 값으로 변경
-secret = ""          # 본인 값으로 변경
+access = ""          # 본인 값으로 변경!
+secret = ""          # 본인 값으로 변경!
 
 def send_log_to_slack(user_name, msg):
     ts = datetime.datetime.now().strftime('%H:%M:%S')
